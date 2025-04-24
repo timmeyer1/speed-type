@@ -14,7 +14,7 @@ export default function RegisterForm() {
     e.preventDefault();
     setError("");
 
-    const res = await fetch("/api/register", {
+    const res = await fetch("/api/auth/register", {
       method: "POST",
       body: JSON.stringify(form),
       headers: { "Content-Type": "application/json" },
