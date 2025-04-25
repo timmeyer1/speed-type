@@ -1,67 +1,88 @@
 import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { connectToDatabase } from "@/lib/db";
-import { User } from "@/models/User";
+import connectToDatabase from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
+import CredentialsProvider from "next-auth/providers/credentials";
+import Github from "next-auth/providers/github";
+import User from "@/models/User";
 
 const handler = NextAuth({
-  providers: [
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        await connectToDatabase();
-
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email et mot de passe requis");
-        }
-
-        const user = await User.findOne({ email: credentials.email });
-        if (!user) {
-          throw new Error("Utilisateur non trouvé");
-        }
-
-        const isValid = await bcrypt.compare(credentials.password, user.password);
-        if (!isValid) {
-          throw new Error("Mot de passe incorrect");
-        }
-
-        return {
-          id: user._id.toString(),
-          email: user.email,
-          name: user.username,
-        };
-      },
-    }),
-  ],
-  pages: {
-    signIn: "/login",
-  },
   session: {
     strategy: "jwt",
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.email = user.email;
-        token.name = user.name;
-      }
-      return token;
     },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.email = token.email as string;
-        session.user.name = token.name as string;
-      }
-      return session;
-    },
-  },
-});
+    providers: [
 
+        Github({
+            clientId: process.env.GITHUB_ID as string,
+            clientSecret: process.env.GITHUB_SECRET as string,
+        }),
+        CredentialsProvider({
+            name: "Credentials",
+            credentials: {
+                email: {},
+                password:{},
+            },
+            async authorize(credentials) {
+                try {
+                    await connectToDatabase();
+                    const user = await User.findOne({ email: credentials?.email });
+                    if (!user) {
+                        throw new Error("")
+                    }
+                    const isValidPassword = await bcrypt.compare(
+                        credentials?.password ?? "", user.password as string
+                    ); 
+                    if (!isValidPassword) {
+                        throw new Error ("")
+                    }
+                    return user;
+                }
+                catch {
+                    return null
+                }
+            }
+        })
+
+    ],
+    callbacks: {
+        async signIn({ account, profile }) {
+            if (account?.provider === "github") {
+                await connectToDatabase();
+                const existingUser = await User.findOne({ email: profile?.email });
+                if (!existingUser) {
+                    await User.create({
+                        name: profile?.name,
+                        email: profile?.email,
+                    })
+                }
+            }
+            return true;
+              },
+
+        async jwt({ token, user }) {
+            if (user) {
+                token.id = user.id;
+                token.email = user.email;
+            }
+            return token;
+        },
+        async session({ session, token }) {
+            if (token) {
+                session.user = {
+                    email: token.email,
+                    name: token.name,
+                    image: token.picture,
+                };
+            };
+            return session;
+        }
+        
+    },
+    pages: {
+       signIn: "/login",
+    },
+    secret: process.env.NEXTAUTH_SECRET
+    
+
+  
+});
 export { handler as GET, handler as POST };

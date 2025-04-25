@@ -1,17 +1,39 @@
-import mongoose, { Schema, Document, models } from "mongoose";
+import mongoose, { Document, Model, Schema } from 'mongoose';
 
-export interface IUser extends Document {
-  username: string;
-  email: string;
-  password: string;
-  friends: mongoose.Types.ObjectId[];
+interface IUser extends Document {
+    name: string;
+    email: string;
+    password?: string; // on met un "?" psq il peut se connecter avec les services
+    isAdmin: boolean;
+    id: string;
+    userconfig_id: mongoose.Types.ObjectId;
 }
 
-const UserSchema = new Schema<IUser>({
-  username: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-});
+const UserSchema: Schema<IUser> = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true,
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    password: {
+        type: String,
+        require: false,
+    },
+    isAdmin: {
+        type: Boolean,
+        default: false,
+    },
+    userconfig_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'UserConfig',
+    }
+})
 
-export const User = models.User || mongoose.model<IUser>("User", UserSchema);
+const User: Model<IUser> =
+  mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
+
+export default User;

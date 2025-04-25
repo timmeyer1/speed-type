@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function RegisterForm() {
-  const [form, setForm] = useState({ username: "", email: "", password: "" });
+  const [form, setForm] = useState({ user: "", email: "", password: "" });
   const [error, setError] = useState("");
   const router = useRouter();
 
@@ -31,7 +31,7 @@ export default function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-sm mx-auto">
-      <Input type="text" placeholder="Nom d'utilisateur" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} required />
+      <Input type="text" placeholder="Nom d'utilisateur" value={form.user} onChange={(e) => setForm({ ...form, user: e.target.value })} required />
       <Input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
       <Input type="password" placeholder="Mot de passe" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
       {error && <p className="text-sm text-red-500">{error}</p>}
