@@ -67,7 +67,7 @@ export default function TypingTest() {
     const words = text.split(" ");
     const chunkedLines: string[] = [];
     let currentChunk = [];
-    const maxWordsPerLine = 6;
+    const maxWordsPerLine = 5;
 
     for (let i = 0; i < words.length; i++) {
       currentChunk.push(words[i]);
