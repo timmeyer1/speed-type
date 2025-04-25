@@ -190,7 +190,7 @@ export default function TypingTest() {
       if (!startTimeRef.current) return;
       
       const elapsedSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
-      const remaining = Math.max(0, 5 - elapsedSeconds);
+      const remaining = Math.max(0, 60 - elapsedSeconds);
       setTimeLeft(remaining);
 
       if (remaining <= 0) {
